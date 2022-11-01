@@ -2,46 +2,33 @@ package com.udacity.project4.utils
 
 import android.view.View
 import androidx.databinding.BindingAdapter
-import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.RecyclerView
-import com.udacity.project4.base.BaseRecyclerViewAdapter
+import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
+import com.udacity.project4.locationreminders.reminderslist.RemindersListAdapter
 
+/**
+ * Use binding adapter to set the recycler view data
+ */
+@BindingAdapter("reminderList")
+fun RecyclerView.setReminderList(items: List<ReminderDataItem>?) {
+    val adapter = this.adapter as RemindersListAdapter
+    adapter.submitList(items)
+}
 
-object BindingAdapters {
-
-    /**
-     * Use binding adapter to set the recycler view data using livedata object
-     */
-    @Suppress("UNCHECKED_CAST")
-    @BindingAdapter("android:liveData")
-    @JvmStatic
-    fun <T> setRecyclerViewData(recyclerView: RecyclerView, items: LiveData<List<T>>?) {
-        items?.value?.let { itemList ->
-            (recyclerView.adapter as? BaseRecyclerViewAdapter<T>)?.apply {
-                clear()
-                addData(itemList)
-            }
-        }
-    }
-
-    /**
-     * Use this binding adapter to show and hide the views using boolean variables
-     */
-    @BindingAdapter("android:fadeVisible")
-    @JvmStatic
-    fun setFadeVisible(view: View, visible: Boolean? = true) {
-        if (view.tag == null) {
-            view.tag = true
-            view.visibility = if (visible == true) View.VISIBLE else View.GONE
-        } else {
-            view.animate().cancel()
-            if (visible == true) {
-                if (view.visibility == View.GONE)
-                    view.fadeIn()
-            } else {
-                if (view.visibility == View.VISIBLE)
-                    view.fadeOut()
-            }
+/**
+ * Use this binding adapter to show and hide the views using boolean variables
+ */
+@BindingAdapter("fadeVisibleIf")
+fun View.setVisibleIf(visible: Boolean) {
+    if (tag == null) {
+        tag = true
+        visibility = if (visible) View.VISIBLE else View.GONE
+    } else {
+        this.animate().cancel()
+        if (visible && visibility == View.GONE) {
+            this.fadeIn()
+        } else if (!visible && visibility == View.VISIBLE) {
+            this.fadeOut()
         }
     }
 }

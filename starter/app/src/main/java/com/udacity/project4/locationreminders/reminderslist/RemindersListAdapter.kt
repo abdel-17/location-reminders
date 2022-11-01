@@ -1,12 +1,28 @@
 package com.udacity.project4.locationreminders.reminderslist
 
-import com.udacity.project4.R
-// import com.udacity.project4.base.BaseRecyclerViewAdapter
+import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 
-
-////Use data binding to show the reminder on the item
-//class RemindersListAdapter(
-//    callBack: (selectedReminder: ReminderDataItem) -> Unit
-//) : BaseRecyclerViewAdapter<ReminderDataItem>(callBack) {
-//    override fun getLayoutRes(viewType: Int) = R.layout.it_reminder
-//}
+class RemindersListAdapter(
+    private val onItemClick: (selectedReminder: ReminderDataItem) -> Unit
+) : ListAdapter<ReminderDataItem, ReminderListViewHolder>(ReminderItemDiffUtilCallback) {
+    
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReminderListViewHolder {
+        return ReminderListViewHolder.fromParent(parent)
+    }
+    
+    override fun onBindViewHolder(holder: ReminderListViewHolder, position: Int) {
+        holder.bind(getItem(position), onItemClick)
+    }
+    
+    private object ReminderItemDiffUtilCallback : DiffUtil.ItemCallback<ReminderDataItem>() {
+        override fun areItemsTheSame(oldItem: ReminderDataItem, newItem: ReminderDataItem): Boolean {
+            return oldItem.id == newItem.id
+        }
+    
+        override fun areContentsTheSame(oldItem: ReminderDataItem, newItem: ReminderDataItem): Boolean {
+            return oldItem == newItem
+        }
+    }
+}

@@ -1,60 +1,66 @@
 package com.udacity.project4.locationreminders.reminderslist
 
 import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
-import com.udacity.project4.base.BaseViewModel
 import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.dto.Result
+import com.udacity.project4.utils.SingleLiveEvent
 import kotlinx.coroutines.launch
 
 class RemindersListViewModel(
     app: Application,
     private val dataSource: ReminderDataSource
-) : BaseViewModel(app) {
-    // list that holds the reminder data to be displayed on the UI
-    val remindersList = MutableLiveData<List<ReminderDataItem>>()
-
+) : AndroidViewModel(app) {
+    private val _reminders =  MutableLiveData<List<ReminderDataItem>>()
+    
+    // A list that holds the reminder data to be displayed on the UI
+    val reminders: LiveData<List<ReminderDataItem>?>
+        get() = _reminders
+    
     /**
-     * Get all the reminders from the DataSource and add them to the remindersList to be shown on the UI,
-     * or show error if any
+     *  The value of this live data is `true` if the value of
+     *  [reminders] is either `null` or an empty list.
+     */
+    val isEmpty = _reminders.map { remindersList ->
+        remindersList.isNullOrEmpty()
+    }
+    
+    private val _islLoading = MutableLiveData<Boolean>()
+    
+    val isLoading: LiveData<Boolean>
+        get() = _islLoading
+    
+    private val _errorMessage = SingleLiveEvent<String?>()
+    
+    val errorMessage: LiveData<String?>
+        get() = _errorMessage
+    
+    /**
+     * Get all the reminders from the data source and add them to [reminders]
+     * to be shown on the UI, or show an error (if any).
      */
     fun loadReminders() {
-        showLoading.value = true
         viewModelScope.launch {
-            //interacting with the dataSource has to be through a coroutine
+            _islLoading.postValue(true)
+            // Interacting with the data source has to be through a coroutine
             val result = dataSource.getReminders()
-            showLoading.postValue(false)
+            _islLoading.postValue(false)
             when (result) {
                 is Result.Success -> {
-                    val dataList = ArrayList<ReminderDataItem>()
-                    dataList.addAll(result.data.map { reminder ->
-                        //map the reminder data from the DB to the be ready to be displayed on the UI
-                        ReminderDataItem(
-                            reminder.title,
-                            reminder.description,
-                            reminder.location,
-                            reminder.latitude,
-                            reminder.longitude,
-                            reminder.id
-                        )
-                    })
-                    remindersList.value = dataList
+                    val remindersList = result.data.map(ReminderDTO::toReminderDataItem)
+                    _reminders.postValue(remindersList)
                 }
-                is Result.Error ->
-                    showSnackBar.value = result.message
+                is Result.Error -> {
+                    // `_errorMessage` is a custom live data implementation whose setter runs on
+                    // the main thread, so we don't need to call `postValue`.
+                    _errorMessage.value = result.message
+                }
             }
-
-            //check if no data has to be shown
-            invalidateShowNoData()
         }
-    }
-
-    /**
-     * Inform the user that there's not any data if the remindersList is empty
-     */
-    private fun invalidateShowNoData() {
-        showNoData.value = remindersList.value == null || remindersList.value!!.isEmpty()
     }
 }
