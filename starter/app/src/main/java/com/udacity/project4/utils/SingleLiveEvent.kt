@@ -48,29 +48,28 @@ class SingleLiveEvent<T> : MutableLiveData<T>() {
         }
 
         // Observe the internal MutableLiveData
-        super.observe(owner, Observer { t ->
+        super.observe(owner) { value ->
             if (mPending.compareAndSet(true, false)) {
-                observer.onChanged(t)
+                observer.onChanged(value)
             }
-        })
+        }
     }
-
+    
     @MainThread
     override fun setValue(t: T?) {
         mPending.set(true)
         super.setValue(t)
     }
 
-    /**
-     * Used for cases where T is Void, to make calls cleaner.
-     */
-    @MainThread
-    fun call() {
-        value = null
+    private companion object {
+        const val TAG = "SingleLiveEvent"
     }
+}
 
-    companion object {
-
-        private val TAG = "SingleLiveEvent"
-    }
+/**
+ * Used for to make call is [Unit] to make calls cleaner.
+ */
+@MainThread
+fun SingleLiveEvent<Unit>.call() {
+    value = null
 }
