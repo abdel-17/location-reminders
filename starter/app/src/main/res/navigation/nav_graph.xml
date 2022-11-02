@@ -10,10 +10,17 @@
         <action
             android:id="@+id/actionToLogin"
             app:destination="@id/authenticationFragment" />
+        <action
+            android:id="@+id/actionToSaveReminder"
+            app:destination="@id/saveReminderFragment" />
     </fragment>
 
     <fragment
         android:id="@+id/authenticationFragment"
         android:name="com.udacity.project4.authentication.AuthenticationFragment" />
+
+    <fragment
+        android:id="@+id/saveReminderFragment"
+        android:name="com.udacity.project4.locationreminders.savereminder.SaveReminderFragment" />
 
 </navigation>

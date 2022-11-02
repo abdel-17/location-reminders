@@ -57,6 +57,10 @@ class AuthenticationFragment : Fragment() {
             launcherFirebaseUILogin()
         }
         setupBackButtonAction()
+    }
+    
+    override fun onResume() {
+        super.onResume()
         navigateBackIfAuthenticated()
     }
     

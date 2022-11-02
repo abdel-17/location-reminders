@@ -1,4 +1,4 @@
-package com.udacity.project4.locationreminders.savereminder.selectreminderlocation
+package com.udacity.project4.locationreminders.savereminder
 
 
 //import android.os.Bundle
