@@ -10,7 +10,7 @@ import com.udacity.project4.databinding.ActivityReminderDescriptionBinding
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 
 /**
- * Activity that displays the reminder details after the user clicks on the notification
+ * An activity that displays reminder details after the user clicks on the notification.
  */
 class ReminderDescriptionActivity : AppCompatActivity() {
     
@@ -18,11 +18,10 @@ class ReminderDescriptionActivity : AppCompatActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = DataBindingUtil.setContentView(
-            this,
-            R.layout.activity_reminder_description
-        )
-        // TODO: Add the implementation of the reminder details
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_reminder_description)
+        binding.reminderDataItem = intent.extras?.getSerializable(
+            EXTRA_REMINDER_DATA_ITEM
+        ) as ReminderDataItem
     }
     
     companion object {

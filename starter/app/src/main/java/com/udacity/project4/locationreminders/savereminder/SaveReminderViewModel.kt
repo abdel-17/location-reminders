@@ -39,7 +39,7 @@ class SaveReminderViewModel(
     val showSaveButton = _showLoading.map { isLoading -> !isLoading }
     
     /**
-     * The reminder data item created from the current values.
+     * The reminder data item created from the user input.
      */
     val reminderDataItem: ReminderDataItem
         get() = ReminderDataItem(
@@ -51,7 +51,7 @@ class SaveReminderViewModel(
         )
     
     /**
-     * Validate the entered data, then if it's valid saves it to the DataSource.
+     * Validate [reminderData], then if it's valid saves it to the DataSource.
      */
     fun validateAndSaveReminder(reminderData: ReminderDataItem) {
         // Check if the user entered the title and location.

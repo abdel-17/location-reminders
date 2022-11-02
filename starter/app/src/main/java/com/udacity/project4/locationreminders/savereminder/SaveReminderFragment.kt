@@ -36,10 +36,9 @@ class SaveReminderFragment : BaseFragment() {
             // TODO Navigate to another fragment to get the user location
         }
         binding.saveReminder.setOnClickListener {
-            val reminder = viewModel.reminderDataItem
-            // TODO: use the user entered reminder details to:
-            //  1) add a geofencing request
-            //  2) save the reminder to the local db
+            val reminderDataItem = viewModel.reminderDataItem
+            viewModel.validateAndSaveReminder(reminderDataItem)
+            // TODO add a geofencing request
         }
     }
     

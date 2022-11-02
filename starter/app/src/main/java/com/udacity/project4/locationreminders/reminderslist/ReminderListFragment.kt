@@ -11,6 +11,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.databinding.FragmentRemindersBinding
+import com.udacity.project4.locationreminders.ReminderDescriptionActivity
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class ReminderListFragment : BaseFragment() {
@@ -55,15 +56,21 @@ class ReminderListFragment : BaseFragment() {
     
     private fun setupRecyclerView() {
         val adapter = RemindersListAdapter { item ->
-            // TODO setup on click action
+            Log.i(TAG, "Reminder list item clicked")
+            launchRemindersDescriptionActivityFor(item)
         }
         binding.remindersRecyclerView.adapter = adapter
+    }
+    
+    private fun launchRemindersDescriptionActivityFor(reminderDataItem: ReminderDataItem) {
+        // Create an intent to launch the activity
+        val intent = ReminderDescriptionActivity.newIntent(requireContext(), reminderDataItem)
+        startActivity(intent)
     }
     
     private fun navigateToLogin() {
         Log.i(TAG, "Navigating to the login screen")
         findNavController().navigate(ReminderListFragmentDirections.actionToLogin())
-        
     }
     
     private fun setupOptionsMenu() {
