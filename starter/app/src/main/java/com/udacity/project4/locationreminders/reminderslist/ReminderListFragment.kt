@@ -1,9 +1,14 @@
 package com.udacity.project4.locationreminders.reminderslist
 
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.navigation.fragment.findNavController
+import com.firebase.ui.auth.AuthUI
+import com.google.firebase.auth.FirebaseAuth
 import com.udacity.project4.R
 import com.udacity.project4.databinding.FragmentRemindersBinding
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
@@ -25,20 +30,15 @@ class ReminderListFragment : Fragment() {
     
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.apply {
-            viewModel = this@ReminderListFragment.viewModel
-            lifecycleOwner = viewLifecycleOwner
-            // TODO use data binding to setup the refresh listener
-            refreshLayout.setOnRefreshListener {
-                this@ReminderListFragment.viewModel.loadReminders()
-            }
-            addReminderFAB.setOnClickListener {
-                navigateToAddReminder()
-            }
+        binding.viewModel = viewModel
+        binding.lifecycleOwner = viewLifecycleOwner
+        binding.addReminderFAB.setOnClickListener {
+            navigateToAddReminder()
         }
         setupRecyclerView()
         setDisplayHomeAsUpEnabled(false)
         setupOptionsMenu()
+        navigateToLoginUnlessAuthenticated()
     }
     
     override fun onResume() {
@@ -58,6 +58,14 @@ class ReminderListFragment : Fragment() {
         binding.remindersRecyclerView.adapter = adapter
     }
     
+    private fun navigateToLoginUnlessAuthenticated() {
+        if (FirebaseAuth.getInstance().currentUser == null) {
+            // Navigate to the authentication fragment
+            Log.i(TAG, "Navigating to the login screen")
+            findNavController().navigate(ReminderListFragmentDirections.actionToLogin())
+        }
+    }
+    
     private fun setupOptionsMenu() {
         val menuProvider = object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
@@ -68,13 +76,19 @@ class ReminderListFragment : Fragment() {
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 return when (menuItem.itemId) {
                     R.id.logout -> {
-                        // TODO: add the logout implementation
+                        Log.i(TAG, "Logging out")
+                        AuthUI.getInstance().signOut(requireContext())
                         true
                     }
                     else -> false
                 }
             }
         }
-        requireActivity().addMenuProvider(menuProvider, viewLifecycleOwner)
+        // Add a menu that's shown when the lifecycle of the view is at least `STARTED`.
+        requireActivity().addMenuProvider(menuProvider, viewLifecycleOwner, Lifecycle.State.STARTED)
+    }
+    
+    private companion object {
+        const val TAG = "ReminderListFragment"
     }
 }

@@ -6,19 +6,19 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
-import com.udacity.project4.R
 import com.udacity.project4.databinding.FragmentAuthenticationBinding
-import kotlin.math.log
 
-// TODO update the documentation to RemindersFragment
 /**
- * A fragment that asks the users to sign in / register and redirects
- * signed in users to the RemindersActivity.
+ * A fragment that asks the users to sign in or register
+ * and redirects them back once signed in.
  */
 class AuthenticationFragment : Fragment() {
     
@@ -27,19 +27,15 @@ class AuthenticationFragment : Fragment() {
     private val firebaseLoginLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { activityResult ->
-        // Used for logging purposes
-        val tag = this.javaClass.simpleName
         if (activityResult.resultCode == Activity.RESULT_OK) {
             // User successfully signed in
             val displayName = FirebaseAuth.getInstance().currentUser?.displayName
-            Log.i(tag, "Successfully signed in user ${displayName}!")
+            Log.i(TAG, "Successfully signed in user ${displayName}!")
         } else {
             // Sign in failed. If `response` is null, the user canceled the sign-in
             // flow using the back button. Otherwise log the response's error code.
-            when (val response = IdpResponse.fromResultIntent(activityResult.data)) {
-                null -> Log.i(tag, "Sign in cancelled")
-                else -> Log.i(tag, "Sign in unsuccessful ${response.error?.errorCode}")
-            }
+            val errorCode = IdpResponse.fromResultIntent(activityResult.data)?.error?.errorCode
+            Log.i(TAG, "Sign in unsuccessful with error code $errorCode")
         }
     }
     
@@ -48,8 +44,6 @@ class AuthenticationFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        // TODO: If the user was authenticated, send him to RemindersActivity
-        
         // TODO: a bonus is to customize the sign in flow to look nice using:
         // https://github.com/firebase/FirebaseUI-Android/blob/master/auth/README.md#custom-layout
         binding = FragmentAuthenticationBinding.inflate(inflater, container, false)
@@ -62,18 +56,49 @@ class AuthenticationFragment : Fragment() {
             // Launch the FirebaseUI login screen
             launcherFirebaseUILogin()
         }
+        setupBackButtonAction()
+        navigateBackIfAuthenticated()
     }
     
     private fun launcherFirebaseUILogin() {
+        val signInIntent = AuthUI.getInstance()
+            .createSignInIntentBuilder()
+            .setAvailableProviders(loginProviders)
+            .build()
+        firebaseLoginLauncher.launch(signInIntent)
+    }
+    
+    private fun setupBackButtonAction() {
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+            Log.i(TAG, "Back button pressed")
+            AlertDialog.Builder(requireContext())
+                .setMessage("Login is required to use this app.")
+                .setPositiveButton("Ok") { _, _ ->
+                    launcherFirebaseUILogin()
+                }
+                .setNegativeButton("Quit") { _, _ ->
+                    // Close the app.
+                    requireActivity().finishAndRemoveTask()
+                }
+                .show()
+        }
+    }
+    
+    private fun navigateBackIfAuthenticated() {
+        if (FirebaseAuth.getInstance().currentUser != null) {
+            Log.i(TAG, "Navigating back")
+            // Go back to the previous fragment
+            findNavController().popBackStack()
+        }
+    }
+    
+    private companion object {
+        const val TAG = "AuthenticationFragment"
+    
         // Give users the option to sign in or register with their email or Google account.
-        val providers = listOf(
+        val loginProviders = listOf(
             AuthUI.IdpConfig.EmailBuilder().build(),
             AuthUI.IdpConfig.GoogleBuilder().build()
         )
-        val signInIntent = AuthUI.getInstance()
-            .createSignInIntentBuilder()
-            .setAvailableProviders(providers)
-            .build()
-        firebaseLoginLauncher.launch(signInIntent)
     }
 }

@@ -6,12 +6,14 @@
 
     <fragment
         android:id="@+id/reminderListFragment"
-        android:name="com.udacity.project4.locationreminders.reminderslist.ReminderListFragment"
-        android:label="ReminderListFragment"/>
+        android:name="com.udacity.project4.locationreminders.reminderslist.ReminderListFragment">
+        <action
+            android:id="@+id/actionToLogin"
+            app:destination="@id/authenticationFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/authenticationFragment"
-        android:name="com.udacity.project4.authentication.AuthenticationFragment"
-        android:label="AuthenticationFragment" />
+        android:name="com.udacity.project4.authentication.AuthenticationFragment" />
 
 </navigation>
