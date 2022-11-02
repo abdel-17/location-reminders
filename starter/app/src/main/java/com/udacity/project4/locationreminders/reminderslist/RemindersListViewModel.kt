@@ -30,10 +30,10 @@ class RemindersListViewModel(
         remindersList.isNullOrEmpty()
     }
     
-    private val _islLoading = MutableLiveData<Boolean>()
+    private val _isLoading = MutableLiveData<Boolean>()
     
     val isLoading: LiveData<Boolean>
-        get() = _islLoading
+        get() = _isLoading
     
     private val _errorMessage = SingleLiveEvent<String?>()
     
@@ -46,18 +46,18 @@ class RemindersListViewModel(
      */
     fun loadReminders() {
         viewModelScope.launch {
-            _islLoading.postValue(true)
+            _isLoading.postValue(true)
             // Interacting with the data source has to be through a coroutine
             val result = dataSource.getReminders()
-            _islLoading.postValue(false)
+            _isLoading.postValue(false)
             when (result) {
                 is Result.Success -> {
                     val remindersList = result.data.map(ReminderDTO::toReminderDataItem)
                     _reminders.postValue(remindersList)
                 }
                 is Result.Error -> {
-                    // `_errorMessage` is a custom live data implementation whose setter runs on
-                    // the main thread, so we don't need to call `postValue`.
+                    // `_errorMessage` is a custom live data implementation whose value setter
+                    // runs on the main thread, so we don't need to call `postValue`.
                     _errorMessage.value = result.message
                 }
             }
