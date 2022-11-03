@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
 import com.google.android.material.snackbar.Snackbar
+import com.udacity.project4.utils.makeSnackbar
 
 abstract class BaseFragment : Fragment() {
     
@@ -16,7 +17,7 @@ abstract class BaseFragment : Fragment() {
         // Show a snackbar when the view model emits a non-null snackbar event.
         viewModel.showSnackbar.observe(viewLifecycleOwner) { message ->
             if (message != null) {
-                Snackbar.make(view, message, snackbarDuration).show()
+                makeSnackbar(message, snackbarDuration).show()
             }
         }
     }

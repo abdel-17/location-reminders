@@ -2,7 +2,13 @@ package com.udacity.project4.utils
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
+import android.content.pm.PackageManager
 import android.view.View
+import androidx.annotation.StringRes
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
+import com.google.android.material.snackbar.Snackbar
 
 fun View.fadeIn() {
     visibility = View.VISIBLE
@@ -21,4 +27,26 @@ fun View.fadeOut() {
             this@fadeOut.visibility = View.GONE
         }
     })
+}
+
+fun Fragment.makeSnackbar(message: String, duration: Int): Snackbar {
+    return Snackbar.make(requireView(), message, duration)
+}
+
+fun Fragment.makeSnackbar(@StringRes message: Int, duration: Int): Snackbar {
+    return Snackbar.make(requireView(), message, duration)
+}
+
+fun Fragment.checkPermissionGranted(permission: String): Boolean {
+    return ContextCompat.checkSelfPermission(
+        requireContext(),
+        permission
+    ) == PackageManager.PERMISSION_GRANTED
+}
+
+fun Fragment.shouldShowPermissionRationale(permission: String): Boolean {
+    return ActivityCompat.shouldShowRequestPermissionRationale(
+        requireActivity(),
+        permission
+    )
 }
