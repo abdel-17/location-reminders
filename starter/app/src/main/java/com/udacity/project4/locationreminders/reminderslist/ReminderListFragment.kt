@@ -79,7 +79,7 @@ class ReminderListFragment : BaseFragment() {
                 // Display a logout menu item
                 menuInflater.inflate(R.menu.main_menu, menu)
             }
-    
+            
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 return when (menuItem.itemId) {
                     R.id.logout -> {

@@ -33,7 +33,7 @@ class SaveReminderFragment : BaseFragment() {
         binding.viewModel = viewModel
         binding.lifecycleOwner = viewLifecycleOwner
         binding.selectLocation.setOnClickListener {
-            // TODO Navigate to another fragment to get the user location
+            findNavController().navigate(SaveReminderFragmentDirections.actionToSelectLocation())
         }
         binding.saveReminder.setOnClickListener {
             val reminderDataItem = viewModel.reminderDataItem
