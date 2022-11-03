@@ -9,6 +9,7 @@ import android.view.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
+import androidx.navigation.fragment.findNavController
 import com.google.android.gms.location.CurrentLocationRequest
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -16,7 +17,11 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.PointOfInterest
 import com.google.android.material.snackbar.Snackbar
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
@@ -36,6 +41,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private lateinit var map: GoogleMap
     
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    
+    private var currentMarker: Marker? = null
+    
+    private var selectedPOI: PointOfInterest? = null
     
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -73,7 +82,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         binding.viewModel = viewModel
         binding.lifecycleOwner = viewLifecycleOwner
         binding.buttonSave.setOnClickListener {
-            onSavedClicked()
+            onSaveClicked()
         }
         
         val mapFragment = childFragmentManager.findFragmentById(
@@ -82,26 +91,57 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
         
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
-        // TODO: zoom to the user location after taking his permission
         // TODO: add style to the map
-        // TODO: put a marker to location that the user selected
-        // TODO: call this function after the user confirms on the selected location
         return binding.root
     }
     
-    private fun onSavedClicked() {
-        // TODO setup save action
+    private fun onSaveClicked() {
+        // We store a local variable to take advantage of smart casting.
+        val marker = currentMarker
+        if (marker == null) {
+            makeSnackbar("Please pick a location", Snackbar.LENGTH_LONG).show()
+            return
+        }
+        Log.i(TAG, "Saving... POI: ${selectedPOI?.name}, position: ${marker.position}")
+        // Save the location data to the view model.
+        viewModel.latitude.value = marker.position.latitude
+        viewModel.longitude.value = marker.position.longitude
+        viewModel.reminderSelectedLocationName.value = selectedPOI?.name
+        // Navigate back to the save reminders fragment.
+        findNavController().popBackStack()
     }
     
     override fun onMapReady(map: GoogleMap) {
         this.map = map
         setupOptionsMenu()
         requestPermissionsThenMoveToCurrentLocation()
-        onLocationSelected()
+        setupOnMapLongClick()
+        setupOnMapPoiClick()
+    }
+    
+    private fun setupOptionsMenu() {
+        val menuProvider = object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menuInflater.inflate(R.menu.map_options, menu)
+            }
+            
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                map.mapType = when (menuItem.itemId) {
+                    R.id.normal_map -> GoogleMap.MAP_TYPE_NORMAL
+                    R.id.hybrid_map -> GoogleMap.MAP_TYPE_HYBRID
+                    R.id.satellite_map -> GoogleMap.MAP_TYPE_SATELLITE
+                    R.id.terrain_map -> GoogleMap.MAP_TYPE_TERRAIN
+                    else -> return false
+                }
+                return true
+            }
+        }
+        requireActivity().addMenuProvider(menuProvider, viewLifecycleOwner, Lifecycle.State.STARTED)
     }
     
     /**
-     * Requests location permissions and moves to the current location (if granted).
+     * Requests location permissions and moves the map's camera
+     * to the current location (if granted).
      */
     private fun requestPermissionsThenMoveToCurrentLocation() {
         when {
@@ -145,37 +185,36 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     }.show()
                 } else {
                     val position = LatLng(location.latitude, location.longitude)
-                    map.moveCamera(
-                        CameraUpdateFactory.newLatLngZoom(position, 15f)
-                    )
+                    map.moveCamera(CameraUpdateFactory.newLatLngZoom(position, 15f))
+                    Log.i(TAG, "Moved camera to $position")
                 }
             }
     }
     
-    private fun setupOptionsMenu() {
-        val menuProvider = object : MenuProvider {
-            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-                menuInflater.inflate(R.menu.map_options, menu)
-            }
-            
-            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-                map.mapType = when (menuItem.itemId) {
-                    R.id.normal_map -> GoogleMap.MAP_TYPE_NORMAL
-                    R.id.hybrid_map -> GoogleMap.MAP_TYPE_HYBRID
-                    R.id.satellite_map -> GoogleMap.MAP_TYPE_SATELLITE
-                    R.id.terrain_map -> GoogleMap.MAP_TYPE_TERRAIN
-                    else -> return false
-                }
-                return true
-            }
+    private fun setupOnMapLongClick() {
+        map.setOnMapLongClickListener { position ->
+            selectedPOI = null
+            addMarkerAt(position)
         }
-        requireActivity().addMenuProvider(menuProvider, viewLifecycleOwner, Lifecycle.State.STARTED)
     }
     
-    private fun onLocationSelected() {
-        // TODO: When the user confirms on the selected location,
-        //  send back the selected location details to the view model
-        //  and navigate back to the previous fragment to save the reminder and add the geofence
+    private fun setupOnMapPoiClick() {
+        map.setOnPoiClickListener { poi ->
+            selectedPOI = poi
+            // POI markers are given a different color to differentiate them from regular markers.
+            addMarkerAt(poi.latLng, markerHue = BitmapDescriptorFactory.HUE_YELLOW)
+        }
+    }
+    
+    private fun addMarkerAt(position: LatLng, markerHue: Float = BitmapDescriptorFactory.HUE_RED) {
+        Log.i(TAG, "Adding a marker at $position")
+        // Replace the old marker
+        currentMarker?.remove()
+        currentMarker = map.addMarker(
+            MarkerOptions()
+                .position(position)
+                .icon(BitmapDescriptorFactory.defaultMarker(markerHue))
+        )
     }
     
     private companion object {

@@ -12,7 +12,7 @@ import com.udacity.project4.utils.SingleLiveEvent
 @Suppress("PropertyName")
 abstract class BaseViewModel(protected val app: Application) : AndroidViewModel(app) {
     
-    protected val _showLoading = MutableLiveData<Boolean>()
+    protected val _showLoading = MutableLiveData(false)
     
     /**
      * Yhe view should show a loading indicator when the value of this live data is `true`.

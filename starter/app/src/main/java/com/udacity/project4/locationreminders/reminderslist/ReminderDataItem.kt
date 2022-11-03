@@ -16,7 +16,16 @@ data class ReminderDataItem(
     val id: String = UUID.randomUUID().toString()
 ) : Serializable {
     
-    fun toReminderDTO() = ReminderDTO(
-        title, description, location, latitude, longitude, id
-    )
+    fun toReminderDTO() = ReminderDTO(title, description, location, latitude, longitude, id)
+    
+    fun describeLocation(): String {
+        val locationFormatted = String.format(
+            "(%1.2f, %2.2f)",
+            latitude, longitude
+        )
+        return when (location) {
+            null -> locationFormatted
+            else -> "$location at $locationFormatted"
+        }
+    }
 }
