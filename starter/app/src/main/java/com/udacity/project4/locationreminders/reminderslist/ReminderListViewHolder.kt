@@ -12,6 +12,7 @@ class ReminderListViewHolder private constructor(
     fun bind(item: ReminderDataItem, onClick: (ReminderDataItem) -> Unit) {
         binding.item = item
         binding.root.setOnClickListener { onClick(item) }
+        binding.executePendingBindings()
     }
     
     companion object {
