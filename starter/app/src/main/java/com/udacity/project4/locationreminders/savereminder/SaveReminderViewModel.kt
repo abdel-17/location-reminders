@@ -1,15 +1,14 @@
 package com.udacity.project4.locationreminders.savereminder
 
 import android.app.Application
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.maps.model.PointOfInterest
 import com.udacity.project4.R
+import com.udacity.project4.base.BaseViewModel
 import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
-import com.udacity.project4.base.BaseViewModel
-import com.udacity.project4.utils.SingleLiveEvent
 import kotlinx.coroutines.launch
 
 class SaveReminderViewModel(
@@ -21,56 +20,47 @@ class SaveReminderViewModel(
     
     val reminderDescription = MutableLiveData<String?>()
     
-    val reminderSelectedLocationName = MutableLiveData<String?>()
-    
-    val latitude = MutableLiveData<Double?>()
-    
-    val longitude = MutableLiveData<Double?>()
-    
-    private val _doneSaving = SingleLiveEvent<Boolean>()
-    
-    val doneSaving: LiveData<Boolean>
-        get() = _doneSaving
+    val selectedPOI = MutableLiveData<PointOfInterest?>()
     
     // Hide the save button while the reminder is saving
     val showSaveButton = _showLoading.map { isLoading -> !isLoading }
     
     /**
-     * The reminder data item created from the user input.
+     * Validate the current reminder data item, then if it's valid
+     * saves it to the DataSource.
      */
-    val reminderDataItem: ReminderDataItem
-        get() = ReminderDataItem(
-            reminderTitle.value,
-            reminderDescription.value,
-            reminderSelectedLocationName.value,
-            latitude.value,
-            longitude.value
-        )
-    
-    /**
-     * Validate [reminderData], then if it's valid saves it to the DataSource.
-     */
-    fun validateAndSaveReminder(reminderData: ReminderDataItem) {
+    fun validateAndSaveReminder(): ReminderDataItem? {
         // Check if the user entered the title and location.
-        if (reminderData.title.isNullOrEmpty()) {
+        val title = reminderTitle.value
+        if (title.isNullOrEmpty()) {
             _showSnackbar.value = app.getString(R.string.err_enter_title)
-        } else if (reminderData.location.isNullOrEmpty()) {
-            _showSnackbar.value = app.getString(R.string.err_select_location)
-        } else {
-            // Data is valid.
-            saveReminder(reminderData)
+            return null
         }
+        val poi = selectedPOI.value
+        if (poi == null) {
+            _showSnackbar.value = app.getString(R.string.err_select_location)
+            return null
+        }
+        // Data is valid.
+        val reminder = ReminderDataItem(
+            title,
+            reminderDescription.value,
+            poi.name,
+            poi.latLng.latitude,
+            poi.latLng.longitude
+        )
+        saveReminder(reminder)
+        return reminder
     }
     
     /**
      * Save the reminder to the data source
      */
-    private fun saveReminder(reminderData: ReminderDataItem) {
+    private fun saveReminder(reminder: ReminderDataItem) {
         viewModelScope.launch {
             _showLoading.value = true
-            dataSource.saveReminder(reminderData.toReminderDTO())
+            dataSource.saveReminder(reminder.toReminderDTO())
             _showLoading.value = false
-            _doneSaving.value = true
         }
     }
     
@@ -81,8 +71,6 @@ class SaveReminderViewModel(
     fun onClear() {
         reminderTitle.value = null
         reminderDescription.value = null
-        reminderSelectedLocationName.value = null
-        latitude.value = null
-        longitude.value = null
+        selectedPOI.value = null
     }
 }

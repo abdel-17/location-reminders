@@ -14,10 +14,8 @@
         android:id="@+id/reminderCardView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/padding_medium">
-        <!--
-        TODO add fadeVisible attribute
-        -->
+        android:layout_margin="@dimen/padding_medium"
+        app:fadeVisibleIf="@{true}">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"

@@ -1,12 +1,10 @@
 package com.udacity.project4.locationreminders.savereminder
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.*
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
@@ -17,21 +15,17 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PointOfInterest
 import com.google.android.material.snackbar.Snackbar
 import com.udacity.project4.R
-import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
-import com.udacity.project4.utils.checkPermissionGranted
 import com.udacity.project4.utils.makeSnackbar
-import com.udacity.project4.utils.shouldShowPermissionRationale
 import org.koin.android.ext.android.inject
 
-class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
+class SelectLocationFragment : LocationPermissionRequesterFragment(), OnMapReadyCallback {
     
     // Use Koin to get the view model of the SaveReminder
     override val viewModel: SaveReminderViewModel by inject()
@@ -45,33 +39,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private var currentMarker: Marker? = null
     
     private var selectedPOI: PointOfInterest? = null
-    
-    private val locationPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        when {
-            permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true -> {
-                Log.i(TAG, "Precise location permission granted")
-                moveToCurrentLocation()
-            }
-            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true -> {
-                Log.i(TAG, "Approximate location permission granted")
-                moveToCurrentLocation()
-            }
-            else -> {
-                Log.i(TAG, "Location permissions denied")
-                // Tell the user to cooperate with us a little. I swear we're not trying to
-                // spy on you or anything.
-                makeSnackbar(
-                    "Please enable location permissions from the app's settings",
-                    Snackbar.LENGTH_INDEFINITE
-                ).setAction("Done") {
-                    // Try again
-                    moveToCurrentLocation()
-                }.show()
-            }
-        }
-    }
     
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -97,16 +64,14 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     
     private fun onSaveClicked() {
         // We store a local variable to take advantage of smart casting.
-        val marker = currentMarker
-        if (marker == null) {
+        val poi = selectedPOI
+        if (poi == null) {
             makeSnackbar("Please pick a location", Snackbar.LENGTH_LONG).show()
             return
         }
-        Log.i(TAG, "Saving... POI: ${selectedPOI?.name}, position: ${marker.position}")
+        Log.i(TAG, "Saving... POI: ${poi.name}, position: ${poi.latLng}")
         // Save the location data to the view model.
-        viewModel.latitude.value = marker.position.latitude
-        viewModel.longitude.value = marker.position.longitude
-        viewModel.reminderSelectedLocationName.value = selectedPOI?.name
+        viewModel.selectedPOI.value = poi
         // Navigate back to the save reminders fragment.
         findNavController().popBackStack()
     }
@@ -114,8 +79,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     override fun onMapReady(map: GoogleMap) {
         this.map = map
         setupOptionsMenu()
-        requestPermissionsThenMoveToCurrentLocation()
-        setupOnMapLongClick()
+        requestLocationPermissionsIfNeeded()
         setupOnMapPoiClick()
     }
     
@@ -139,90 +103,54 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         requireActivity().addMenuProvider(menuProvider, viewLifecycleOwner, Lifecycle.State.STARTED)
     }
     
-    /**
-     * Requests location permissions and moves the map's camera
-     * to the current location (if granted).
-     */
-    private fun requestPermissionsThenMoveToCurrentLocation() {
-        when {
-            LOCATION_PERMISSIONS.any { checkPermissionGranted(it) } -> {
-                // Either one of the two location permissions have been granted.
-                moveToCurrentLocation()
-            }
-            LOCATION_PERMISSIONS.any { shouldShowPermissionRationale(it) } -> {
-                // Show a snackbar to explain why location permissions are needed.
-                makeSnackbar(
-                    R.string.permission_denied_explanation,
-                    Snackbar.LENGTH_INDEFINITE
-                ).setAction("Ok") {
-                    // Request the permissions
-                    requestLocationPermissions()
-                }.show()
-            }
-            else -> requestLocationPermissions()
-        }
+    override fun showLocationPermissionRationale() {
+        makeSnackbar(
+            R.string.permission_denied_explanation,
+            Snackbar.LENGTH_INDEFINITE
+        ).setAction("Ok") {
+            launchLocationPermissionRequestDialog()
+        }.show()
     }
     
-    /**
-     * Requests foreground location permissions.
-     */
-    private fun requestLocationPermissions() {
-        locationPermissionLauncher.launch(LOCATION_PERMISSIONS.toTypedArray())
-    }
-    
-    // We can suppress the missing permission warning because we requested it earlier.
+    // We can safely suppress the missing permission warning because they've already been granted
     @SuppressLint("MissingPermission")
-    private fun moveToCurrentLocation() {
+    override fun onLocationPermissionsApproved() {
+        // Move the camera to the user's current position
         val request = CurrentLocationRequest.Builder().build()
         fusedLocationClient.getCurrentLocation(request, null)
             .addOnSuccessListener { location: Location? ->
                 if (location == null) {
+                    // Location services are disabled
                     makeSnackbar(
-                        "Please enable location services",
+                        R.string.location_required_error,
                         Snackbar.LENGTH_INDEFINITE
                     ).setAction("Done") {
-                        moveToCurrentLocation()
+                        onLocationPermissionsApproved()
                     }.show()
                 } else {
                     val position = LatLng(location.latitude, location.longitude)
                     map.moveCamera(CameraUpdateFactory.newLatLngZoom(position, 15f))
-                    Log.i(TAG, "Moved camera to $position")
+                    Log.i(TAG, "Moved map camera to $position")
                 }
             }
-    }
-    
-    private fun setupOnMapLongClick() {
-        map.setOnMapLongClickListener { position ->
-            selectedPOI = null
-            addMarkerAt(position)
-        }
     }
     
     private fun setupOnMapPoiClick() {
         map.setOnPoiClickListener { poi ->
             selectedPOI = poi
             // POI markers are given a different color to differentiate them from regular markers.
-            addMarkerAt(poi.latLng, markerHue = BitmapDescriptorFactory.HUE_YELLOW)
+            addMarkerAt(poi.latLng)
         }
     }
     
-    private fun addMarkerAt(position: LatLng, markerHue: Float = BitmapDescriptorFactory.HUE_RED) {
+    private fun addMarkerAt(position: LatLng) {
         Log.i(TAG, "Adding a marker at $position")
         // Replace the old marker
         currentMarker?.remove()
-        currentMarker = map.addMarker(
-            MarkerOptions()
-                .position(position)
-                .icon(BitmapDescriptorFactory.defaultMarker(markerHue))
-        )
+        currentMarker = map.addMarker(MarkerOptions().position(position))
     }
     
     private companion object {
         const val TAG = "SelectLocationFragment"
-        
-        val LOCATION_PERMISSIONS = listOf(
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        )
     }
 }
