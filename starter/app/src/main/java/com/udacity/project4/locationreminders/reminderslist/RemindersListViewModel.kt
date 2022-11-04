@@ -44,8 +44,8 @@ class RemindersListViewModel(
      * to be shown on the UI, or show an error (if any).
      */
     fun loadReminders() {
+        _showLoading.value = true
         viewModelScope.launch {
-            _showLoading.value = true
             // Interacting with the data source has to be through a coroutine
             val result = dataSource.getReminders()
             _showLoading.value = false

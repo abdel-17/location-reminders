@@ -57,8 +57,8 @@ class SaveReminderViewModel(
      * Save the reminder to the data source
      */
     fun saveReminder(reminder: ReminderDataItem) {
+        _showLoading.value = true
         viewModelScope.launch {
-            _showLoading.value = true
             dataSource.saveReminder(reminder.toReminderDTO())
             _showLoading.value = false
         }
