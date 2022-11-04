@@ -17,7 +17,7 @@ class RemindersDaoTest : DaoTestProvider() {
     fun get_reminder_after_saving_successful() = runTest {
         // Save the reminder, then check that it is in the database.
         dao.saveReminder(reminder)
-        assertEquals(dao.getReminderById(reminder.id), reminder)
+        assertEquals(reminder, dao.getReminderById(reminder.id))
     }
     
     @Test

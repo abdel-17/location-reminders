@@ -34,7 +34,7 @@ class RemindersLocalRepositoryTest : DaoTestProvider() {
         // Save the reminder, then check that the returned result is a success.
         repository.saveReminder(reminder)
         val result = repository.getReminder(reminder.id) as? Result.Success
-        assertEquals(result?.data, reminder)
+        assertEquals(reminder, result?.data)
     }
     
     @Test
