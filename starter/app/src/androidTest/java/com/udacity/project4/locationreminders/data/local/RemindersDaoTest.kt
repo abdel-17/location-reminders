@@ -1,17 +1,13 @@
 package com.udacity.project4.locationreminders.data.local
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
-import org.junit.runner.RunWith
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.*
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
+import org.junit.Assert.*
 
 @ExperimentalCoroutinesApi
-@RunWith(AndroidJUnit4::class)
 @SmallTest
 class RemindersDaoTest : DaoTestProvider() {
     
@@ -21,7 +17,7 @@ class RemindersDaoTest : DaoTestProvider() {
     fun get_reminder_after_saving_successful() = runTest {
         // Save the reminder, then check that it is in the database.
         dao.saveReminder(reminder)
-        assertNotNull(dao.getReminderById(reminder.id))
+        assertEquals(dao.getReminderById(reminder.id), reminder)
     }
     
     @Test

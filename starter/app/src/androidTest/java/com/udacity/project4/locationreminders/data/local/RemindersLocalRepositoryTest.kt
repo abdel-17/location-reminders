@@ -1,7 +1,6 @@
 package com.udacity.project4.locationreminders.data.local
 
 import androidx.test.espresso.matcher.ViewMatchers.assertThat
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.dto.Result
@@ -10,14 +9,13 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.hamcrest.CoreMatchers.instanceOf
 import org.junit.*
-import org.junit.runner.RunWith
+import org.junit.Assert.assertEquals
 import kotlin.reflect.KClass
 
 private fun <T : Any> assertInstanceOf(kClass: KClass<T>, actual: Any?) =
     assertThat(actual, instanceOf(kClass.java))
 
 @ExperimentalCoroutinesApi
-@RunWith(AndroidJUnit4::class)
 // Medium Test to test the repository
 @MediumTest
 class RemindersLocalRepositoryTest : DaoTestProvider() {
@@ -35,7 +33,8 @@ class RemindersLocalRepositoryTest : DaoTestProvider() {
     fun get_reminder_after_saving_successful() = runTest {
         // Save the reminder, then check that the returned result is a success.
         repository.saveReminder(reminder)
-        assertInstanceOf(Result.Success::class, repository.getReminder(reminder.id))
+        val result = repository.getReminder(reminder.id) as? Result.Success
+        assertEquals(result?.data, reminder)
     }
     
     @Test
