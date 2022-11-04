@@ -33,7 +33,7 @@ class SaveReminderFragment : LocationPermissionRequesterFragment() {
     
     private lateinit var binding: FragmentSaveReminderBinding
     
-    private lateinit var savedReminder: ReminderDataItem
+    private lateinit var reminderToBeSaved: ReminderDataItem
     
     private val geofencingClient: GeofencingClient by lazy {
         LocationServices.getGeofencingClient(requireActivity())
@@ -41,8 +41,9 @@ class SaveReminderFragment : LocationPermissionRequesterFragment() {
     
     private val geofencingPendingIntent: PendingIntent by lazy {
         val intent = Intent(requireContext(), GeofenceBroadcastReceiver::class.java)
-        val intentFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        // On Android 11 or higher, the flag needs to be mutable for geofencing to work.
+        val intentFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
         } else {
             PendingIntent.FLAG_UPDATE_CURRENT
         }
@@ -77,8 +78,8 @@ class SaveReminderFragment : LocationPermissionRequesterFragment() {
             findNavController().navigate(SaveReminderFragmentDirections.actionToSelectLocation())
         }
         binding.saveReminder.setOnClickListener {
-            viewModel.validateAndSaveReminder()?.let { item ->
-                savedReminder = item
+            viewModel.getReminderIfValid()?.let { reminder ->
+                reminderToBeSaved = reminder
                 // Request location permissions to add a geofence request
                 requestLocationPermissionsIfNeeded()
             }
@@ -105,9 +106,8 @@ class SaveReminderFragment : LocationPermissionRequesterFragment() {
         when {
             // On android versions below Q, background location can be access once foreground
             // location permissions are granted.
-            Build.VERSION.SDK_INT < Build.VERSION_CODES.Q -> addGeofence()
-            
-            checkPermissionGranted(ACCESS_BACKGROUND_LOCATION) -> addGeofence()
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
+                    checkPermissionGranted(ACCESS_BACKGROUND_LOCATION) -> addGeofence()
             
             shouldShowPermissionRationale(ACCESS_BACKGROUND_LOCATION) ->
                 showBackgroundLocationPermissionRationale()
@@ -131,8 +131,8 @@ class SaveReminderFragment : LocationPermissionRequesterFragment() {
         // Add a geofencing request.
         val geofence = Geofence.Builder()
             // Set the id of the geofence
-            .setRequestId(savedReminder.id)
-            .setCircularRegion(savedReminder.latitude, savedReminder.longitude, GEOFENCE_RADIUS)
+            .setRequestId(reminderToBeSaved.id)
+            .setCircularRegion(reminderToBeSaved.latitude, reminderToBeSaved.longitude, GEOFENCE_RADIUS)
             // Observe when the user enters a geofence
             .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
             .setExpirationDuration(GEOFENCE_EXPIRATION_DURATION_MILLIS)
@@ -146,7 +146,9 @@ class SaveReminderFragment : LocationPermissionRequesterFragment() {
         geofencingClient.addGeofences(geofencingRequest, geofencingPendingIntent)
             .addOnSuccessListener {
                 Log.i(TAG, "Geofence added successfully")
-                // Navigate back to the reminders list fragment
+                // Save the reminder to the database and navigate back
+                // to the reminders list fragment.
+                viewModel.saveReminder(reminderToBeSaved)
                 findNavController().popBackStack()
             }
             .addOnFailureListener {

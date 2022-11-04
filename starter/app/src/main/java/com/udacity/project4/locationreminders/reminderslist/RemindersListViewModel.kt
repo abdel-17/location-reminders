@@ -2,8 +2,8 @@ package com.udacity.project4.locationreminders.reminderslist
 
 import android.app.Application
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
 import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
@@ -28,8 +28,15 @@ class RemindersListViewModel(
      * The view should show an indicator that the list is empty
      * when the value of this live data is `true`.
      */
-    val showEmpty = _reminders.map { remindersList ->
-        remindersList.isNullOrEmpty()
+    val showEmpty: LiveData<Boolean> = MediatorLiveData<Boolean>().apply {
+        // If the reminders list is empty, show a loading indicator unless we're
+        // showing a loading indicator. In which case, we hide it to avoid overlap.
+        addSource(_reminders) { remindersList: List<ReminderDataItem> ->
+            value = remindersList.isEmpty() && _showLoading.value != true
+        }
+        addSource(_showLoading) { loading: Boolean ->
+            value = _reminders.value.isNullOrEmpty() && !loading
+        }
     }
     
     /**

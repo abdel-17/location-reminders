@@ -76,7 +76,7 @@ class AuthenticationFragment : Fragment() {
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
             Log.i(TAG, "Back button pressed")
             AlertDialog.Builder(requireContext())
-                .setMessage("Login is required to use this app.")
+                .setMessage("Login is required to use this app")
                 .setPositiveButton("Ok") { _, _ ->
                     launcherFirebaseUILogin()
                 }

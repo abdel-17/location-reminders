@@ -40,7 +40,7 @@ class RemindersLocalRepository(
             remindersDao.saveReminder(reminder)
         }
     }
-
+    
     /**
      * Get a reminder by its id
      * @param id to be used to get the reminder
@@ -59,7 +59,13 @@ class RemindersLocalRepository(
                 Result.Error(e.localizedMessage)
             }
         }
-
+    
+    override suspend fun deleteReminder(id: String) {
+        withContext(ioDispatcher) {
+            remindersDao.deleteReminderById(id)
+        }
+    }
+    
     /**
      * Deletes all the reminders in the db
      */

@@ -26,10 +26,12 @@ class SaveReminderViewModel(
     val showSaveButton = _showLoading.map { isLoading -> !isLoading }
     
     /**
-     * Validate the current reminder data item, then if it's valid
-     * saves it to the DataSource.
+     * A snackbar is shown in the UI if the reminder is invalid.
+     *
+     * @return The current data item if its title and location
+     * have both been selected; otherwise, returns `null`.
      */
-    fun validateAndSaveReminder(): ReminderDataItem? {
+    fun getReminderIfValid(): ReminderDataItem? {
         // Check if the user entered the title and location.
         val title = reminderTitle.value
         if (title.isNullOrEmpty()) {
@@ -42,21 +44,19 @@ class SaveReminderViewModel(
             return null
         }
         // Data is valid.
-        val reminder = ReminderDataItem(
+        return ReminderDataItem(
             title,
             reminderDescription.value,
             poi.name,
             poi.latLng.latitude,
             poi.latLng.longitude
         )
-        saveReminder(reminder)
-        return reminder
     }
     
     /**
      * Save the reminder to the data source
      */
-    private fun saveReminder(reminder: ReminderDataItem) {
+    fun saveReminder(reminder: ReminderDataItem) {
         viewModelScope.launch {
             _showLoading.value = true
             dataSource.saveReminder(reminder.toReminderDTO())

@@ -1,6 +1,5 @@
 package com.udacity.project4.utils
 
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
@@ -12,27 +11,29 @@ import com.udacity.project4.R
 import com.udacity.project4.locationreminders.ReminderDescriptionActivity
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 
-private const val CHANNEL_ID = BuildConfig.APPLICATION_ID + ".channel"
+const val NOTIFICATION_CHANNEL_ID = BuildConfig.APPLICATION_ID + ".channel"
 
 fun sendNotification(context: Context, reminderDataItem: ReminderDataItem) {
-    val notificationManager = context
-        .getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-    
-    // We need to create a NotificationChannel associated with our CHANNEL_ID
-    // before sending a notification.
-    notificationManager.createNotificationChannelIfNull(name = context.getString(R.string.app_name))
-    
-    val intent = ReminderDescriptionActivity.newIntent(context.applicationContext, reminderDataItem)
+    val notificationManager = context.getSystemService(
+        Context.NOTIFICATION_SERVICE
+    ) as NotificationManager
     // Create a pending intent that opens ReminderDescriptionActivity
     // when the user clicks on the notification
+    val intent = ReminderDescriptionActivity.newIntent(context.applicationContext, reminderDataItem)
     val stackBuilder = TaskStackBuilder.create(context)
         .addParentStack(ReminderDescriptionActivity::class.java)
         .addNextIntent(intent)
+    // On Android S or higher, we need to add the mutable flag.
+    val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+    } else {
+        PendingIntent.FLAG_UPDATE_CURRENT
+    }
     val notificationPendingIntent = stackBuilder
-        .getPendingIntent(getUniqueId(), PendingIntent.FLAG_UPDATE_CURRENT)
+        .getPendingIntent(getUniqueId(), flags)
     
     // Build the notification object with the data to be shown
-    val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+    val notification = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
         .setSmallIcon(R.mipmap.ic_launcher)
         .setContentTitle(reminderDataItem.title)
         .setContentText(reminderDataItem.location)
@@ -40,15 +41,6 @@ fun sendNotification(context: Context, reminderDataItem: ReminderDataItem) {
         .setAutoCancel(true)
         .build()
     notificationManager.notify(getUniqueId(), notification)
-}
-
-private fun NotificationManager.createNotificationChannelIfNull(name: String) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-        getNotificationChannel(CHANNEL_ID) == null
-    ) {
-        val channel = NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT)
-        createNotificationChannel(channel)
-    }
 }
 
 private fun getUniqueId() = System.currentTimeMillis().mod(10_000)

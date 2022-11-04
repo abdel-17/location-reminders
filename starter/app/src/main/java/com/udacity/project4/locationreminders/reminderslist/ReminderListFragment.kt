@@ -56,7 +56,7 @@ class ReminderListFragment : BaseFragment() {
     
     private fun setupRecyclerView() {
         val adapter = RemindersListAdapter { item ->
-            Log.i(TAG, "Reminder list item clicked")
+            Log.i(TAG, "Reminder list item clicked with id ${item.id}")
             launchRemindersDescriptionActivityFor(item)
         }
         binding.remindersRecyclerView.adapter = adapter
