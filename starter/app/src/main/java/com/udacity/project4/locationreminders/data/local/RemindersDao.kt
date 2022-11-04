@@ -23,7 +23,7 @@ interface RemindersDao {
      */
     @Query("SELECT * FROM reminders where entry_id = :reminderId")
     suspend fun getReminderById(reminderId: String): ReminderDTO?
-
+    
     /**
      * Insert a reminder in the database. If the reminder already exists, replace it.
      *
@@ -37,11 +37,10 @@ interface RemindersDao {
      */
     @Query("DELETE FROM reminders WHERE entry_id = :reminderId")
     suspend fun deleteReminderById(reminderId: String)
-
+    
     /**
      * Delete all reminders.
      */
     @Query("DELETE FROM reminders")
     suspend fun deleteAllReminders()
-
 }

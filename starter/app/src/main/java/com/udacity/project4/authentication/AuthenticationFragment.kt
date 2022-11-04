@@ -98,7 +98,7 @@ class AuthenticationFragment : Fragment() {
     
     private companion object {
         const val TAG = "AuthenticationFragment"
-    
+        
         // Give users the option to sign in or register with their email or Google account.
         val loginProviders = listOf(
             AuthUI.IdpConfig.EmailBuilder().build(),

@@ -5,10 +5,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.udacity.project4.base.BaseViewModel
 import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.dto.Result
-import com.udacity.project4.base.BaseViewModel
 import kotlinx.coroutines.launch
 
 class RemindersListViewModel(
@@ -16,7 +16,7 @@ class RemindersListViewModel(
     private val dataSource: ReminderDataSource
 ) : BaseViewModel(app) {
     
-    private val _reminders =  MutableLiveData<List<ReminderDataItem>>()
+    private val _reminders = MutableLiveData<List<ReminderDataItem>>()
     
     /**
      * A list that holds the reminder data to be displayed on the UI

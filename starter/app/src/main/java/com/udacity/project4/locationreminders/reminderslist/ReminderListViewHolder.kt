@@ -7,7 +7,7 @@ import com.udacity.project4.databinding.ListItemReminderBinding
 
 class ReminderListViewHolder private constructor(
     private val binding: ListItemReminderBinding
-): RecyclerView.ViewHolder(binding.root) {
+) : RecyclerView.ViewHolder(binding.root) {
     
     fun bind(item: ReminderDataItem, onClick: (ReminderDataItem) -> Unit) {
         binding.item = item

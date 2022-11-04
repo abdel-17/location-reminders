@@ -132,7 +132,11 @@ class SaveReminderFragment : LocationPermissionRequesterFragment() {
         val geofence = Geofence.Builder()
             // Set the id of the geofence
             .setRequestId(reminderToBeSaved.id)
-            .setCircularRegion(reminderToBeSaved.latitude, reminderToBeSaved.longitude, GEOFENCE_RADIUS)
+            .setCircularRegion(
+                reminderToBeSaved.latitude,
+                reminderToBeSaved.longitude,
+                GEOFENCE_RADIUS
+            )
             // Observe when the user enters a geofence
             .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
             .setExpirationDuration(GEOFENCE_EXPIRATION_DURATION_MILLIS)
