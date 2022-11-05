@@ -13,7 +13,7 @@ android {
         targetSdkVersion rootProject.targetSdkVersion
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "com.udacity.project4.InstrumentationTestRunner"
     }
     buildTypes {
         release {
@@ -27,6 +27,9 @@ android {
     testOptions.unitTests {
         includeAndroidResources = true
         returnDefaultValues = true
+    }
+    testOptions {
+        animationsDisabled = true
     }
 
     buildFeatures {
@@ -101,6 +104,7 @@ dependencies {
     androidTestImplementation "androidx.test.espresso:espresso-intents:$espressoVersion"
     androidTestImplementation "androidx.test.espresso.idling:idling-concurrent:$espressoVersion"
     androidTestImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "io.insert-koin:koin-test-junit4:$koinVersion"
 
     debugImplementation "androidx.fragment:fragment-testing:$fragmentVersion"
     implementation "androidx.test:core:$androidXTestCoreVersion"

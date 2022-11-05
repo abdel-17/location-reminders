@@ -1,11 +1,10 @@
 package com.udacity.project4.locationreminders.data.local
 
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import org.junit.After
 import org.junit.Before
-import org.junit.Rule
 
 /**
  * Initializes a new in-memory database before each test
@@ -16,17 +15,10 @@ open class DaoTestProvider {
     
     lateinit var dao: RemindersDao
     
-    // Execute tasks synchronously instead of in the background.
-    // This is needed for testing Architecture components.
-    @get:Rule
-    val instantExecutorRule = InstantTaskExecutorRule()
-    
     @Before
     fun setupDatabase() {
-        database = Room.inMemoryDatabaseBuilder(
-            ApplicationProvider.getApplicationContext(),
-            RemindersDatabase::class.java
-        )
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        database = Room.inMemoryDatabaseBuilder(context, RemindersDatabase::class.java)
             .allowMainThreadQueries()
             .build()
         dao = database.remindersDao

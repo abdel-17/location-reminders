@@ -1,15 +1,21 @@
 package com.udacity.project4.locationreminders.data.local
 
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.test.filters.SmallTest
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
-import org.junit.*
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Rule
+import org.junit.Test
 
 @ExperimentalCoroutinesApi
 @SmallTest
 class RemindersDaoTest : DaoTestProvider() {
+    
+    @get:Rule
+    val instantTaskExecutorRule = InstantTaskExecutorRule()
     
     private val reminder = ReminderDTO("Title", null, "Location", 50.0, 90.0)
     

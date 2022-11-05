@@ -1,5 +1,6 @@
 package com.udacity.project4.locationreminders.data.local
 
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.test.espresso.matcher.ViewMatchers.assertThat
 import androidx.test.filters.MediumTest
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
@@ -8,8 +9,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.hamcrest.CoreMatchers.instanceOf
-import org.junit.*
 import org.junit.Assert.assertEquals
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
 import kotlin.reflect.KClass
 
 private fun <T : Any> assertInstanceOf(kClass: KClass<T>, actual: Any?) =
@@ -20,12 +23,16 @@ private fun <T : Any> assertInstanceOf(kClass: KClass<T>, actual: Any?) =
 @MediumTest
 class RemindersLocalRepositoryTest : DaoTestProvider() {
     
-    private lateinit var repository: RemindersLocalRepository
+    @get:Rule
+    val instantTaskExecutorRule = InstantTaskExecutorRule()
     
     private val reminder = ReminderDTO("Title", null, "Location", 50.0, 90.0)
     
+    private lateinit var repository: RemindersLocalRepository
+    
     @Before
-    fun setupRepository() {
+    fun initRepository() {
+        // Use the main dispatcher for testing
         repository = RemindersLocalRepository(dao, Dispatchers.Main)
     }
     

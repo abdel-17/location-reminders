@@ -16,8 +16,15 @@ class MyApp : Application() {
     override fun onCreate() {
         super.onCreate()
         
+        startKoin {
+            androidContext(this@MyApp)
+            modules(productionModule)
+        }
+    }
+    
+    companion object {
         // use Koin Library as a service locator
-        val myModule = module {
+        val productionModule = module {
             // Declare a ViewModel - be later inject into Fragment with dedicated injector
             // using by viewModel()
             viewModel {
@@ -29,12 +36,7 @@ class MyApp : Application() {
                 SaveReminderViewModel(get(), get())
             }
             single<ReminderDataSource> { RemindersLocalRepository(get()) }
-            single { RemindersDatabase.getInstance(this@MyApp).remindersDao }
-        }
-        
-        startKoin {
-            androidContext(this@MyApp)
-            modules(listOf(myModule))
+            single { RemindersDatabase.getInstance(androidContext()).remindersDao }
         }
     }
 }
