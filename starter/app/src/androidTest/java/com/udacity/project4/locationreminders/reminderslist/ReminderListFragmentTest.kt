@@ -9,15 +9,19 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.filters.MediumTest
+import com.udacity.project4.MyApp.Companion.productionModule
 import com.udacity.project4.R
+import com.udacity.project4.TestApplication.Companion.fakeRepositoryModule
 import com.udacity.project4.locationreminders.data.FakeDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.util.DataBindingIdlingResource
 import com.udacity.project4.util.IdlingResourceRule
+import com.udacity.project4.util.KoinTestModulesRule
 import com.udacity.project4.util.monitorFragment
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
+import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.koin.test.KoinTest
@@ -42,8 +46,15 @@ class ReminderListFragmentTest : KoinTest {
     
     private val dataSource: FakeDataSource by inject()
     
-    @Before
-    fun resetDataSource() = dataSource.reset()
+    // Replace the repository with a fake repository
+    @get:Rule
+    val koinTestModulesRule = KoinTestModulesRule(productionModule, fakeRepositoryModule)
+    
+    @After
+    fun resetDataSource() = runBlocking {
+        // Start the next test fresh.
+        dataSource.deleteAllReminders()
+    }
     
     private fun launchFragmentInContainer() = launchFragmentInContainer<ReminderListFragment>(
         themeResId = R.style.AppTheme
@@ -83,10 +94,14 @@ class ReminderListFragmentTest : KoinTest {
     @Test
     fun snackbar_shown_when_loading_error_occurs() = runTest {
         dataSource.shouldReturnError = true
-        launchFragmentInContainer()
-        // Check that a snackbar is shown
-        val snackbarTextId = com.google.android.material.R.id.snackbar_text
-        onView(withId(snackbarTextId))
-            .check(matches(withText(FakeDataSource.UNKNOWN_ERROR_MESSAGE)))
+        try {
+            launchFragmentInContainer()
+            // Check that a snackbar is shown
+            val snackbarTextId = com.google.android.material.R.id.snackbar_text
+            onView(withId(snackbarTextId))
+                .check(matches(withText(FakeDataSource.UNKNOWN_ERROR_MESSAGE)))
+        } finally {
+            dataSource.shouldReturnError = false
+        }
     }
 }

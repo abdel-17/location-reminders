@@ -2,7 +2,6 @@ package com.udacity.project4.locationreminders.data
 
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.dto.Result
-import kotlinx.coroutines.runBlocking
 
 /**
  * A fake data source that acts as a test double to LocalDataSource.
@@ -46,14 +45,6 @@ internal class FakeDataSource : ReminderDataSource {
     
     override suspend fun deleteAllReminders() {
         reminders.clear()
-    }
-    
-    /**
-     * Resets this data source to its initial value.
-     */
-    fun reset() = runBlocking {
-        shouldReturnError = false
-        deleteAllReminders()
     }
     
     companion object {
