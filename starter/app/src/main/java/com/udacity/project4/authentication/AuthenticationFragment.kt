@@ -77,7 +77,7 @@ class AuthenticationFragment : Fragment() {
             Log.i(TAG, "Back button pressed")
             AlertDialog.Builder(requireContext())
                 .setMessage("Login is required to use this app")
-                .setPositiveButton("Ok") { _, _ ->
+                .setPositiveButton("Login") { _, _ ->
                     launcherFirebaseUILogin()
                 }
                 .setNegativeButton("Quit") { _, _ ->

@@ -7,7 +7,6 @@ import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import com.firebase.ui.auth.AuthUI
-import com.google.firebase.auth.FirebaseAuth
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.databinding.FragmentRemindersBinding
@@ -37,10 +36,6 @@ class ReminderListFragment : BaseFragment() {
         }
         setupRecyclerView()
         setupOptionsMenu()
-        // Navigate to the login fragment if the user is signed out.
-        if (FirebaseAuth.getInstance().currentUser == null) {
-            navigateToLogin()
-        }
     }
     
     override fun onResume() {
@@ -97,7 +92,10 @@ class ReminderListFragment : BaseFragment() {
     private fun signOut() {
         Log.i(TAG, "Logging out")
         AuthUI.getInstance().signOut(requireContext())
-        navigateToLogin()
+            .addOnSuccessListener {
+                // Navigate to the login screen on sign out
+                navigateToLogin()
+            }
     }
     
     private companion object {
